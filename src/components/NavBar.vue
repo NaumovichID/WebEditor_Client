@@ -1,27 +1,30 @@
 <template>
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
-      <ul class="navbar-nav">
+<nav class="navbar navbar-expand-md navbar-light bg-light">
+    <ul class="navbar-nav">
         <li class="nav-item">
-          <router-link class="nav-link" to="/">Home</router-link>
+            <router-link class="nav-link" to="/">Home</router-link>
         </li>
         <li class="nav-item">
-          <router-link class="nav-link" to="/about">About</router-link>
+            <router-link class="nav-link" to="/about">About</router-link>
         </li>
-      </ul>
-    </nav>
-  </template>
+    </ul>
+</nav>
+</template>
+
   
-  <script>
-  export default {
+<script>
+export default {
     name: 'NavBar'
-  }
-  </script>
+}
+</script>
+
   
-  <style scoped>
-  li {
+<style scoped>
+li {
     display: inline;
-  }
-  /* .custom-navbar {
+}
+
+/* .custom-navbar {
     display: inline-block;
     padding: 10px 20px;
     margin: 8px;
@@ -30,6 +33,5 @@
     border: none;
     border-radius: 8px;
   } */
-  /* CSS styles for the navbar component */
-  </style>
-  
+/* CSS styles for the navbar component */
+</style>
