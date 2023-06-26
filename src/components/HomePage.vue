@@ -1,27 +1,143 @@
 <template>
-    <div class="home">
-      <h1>Home Page is gonna be here</h1>
-      <p>
-        We're cooking it
-      </p>
+<div class="home">
+
+    <div v-if="fileContent" class="col file-panel">
+        <div class="row justify-content-between">
+            <input class="text-primary font-italic" type="text" v-model="fileName" placeholder="{{ fileName }}">
+            <div class="row">
+                <div v-if="isModified">
+                    <button type="button" class="btn btn-outline-primary btn-sm" @click="saveFile">Save file</button>
+                </div>
+                <div v-else>
+                    <button type="button" class="btn btn-outline-secondary btn-sm disabled" aria-disabled="true">Save file</button>
+                </div>
+                <div class="px-3">
+                    <input type="file" ref="fileInput" accept=".txt" style="display: none" @change="handleFileChange">
+                    <button class="btn btn-primary btn-sm" @click="openFileInput">Upload New</button>
+                </div>
+            </div>
+        </div>
+
+        <pre contenteditable="true" @input="handleFileContentInput">{{ fileContent }}</pre>
     </div>
-  </template>
-  
-  <script>
-  export default {
-    name: 'HomePage'
-  }
-  </script>
-  
+
+    <div v-else class="file-select">
+        <h1>Select a file</h1>
+        <input type="file" ref="fileInput" accept=".txt" style="display: none" @change="handleFileChange">
+        <button class="btn btn-primary" @click="openFileInput">Upload Text File</button>
+    </div>
+
+</div>
+</template>
+
+<script>
+export default {
+    name: 'HomePage',
+
+    data() {
+        return {
+            fileContent: '',
+            fileName: '',
+            initialContent: '',
+        };
+    },
+
+    methods: {
+        openFileInput() {
+            this.$refs.fileInput.click();
+        },
+
+        handleFileChange(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'text/plain') {
+                console.log(file);
+                const reader = new FileReader();
+                reader.onload = () => {
+                    this.fileContent = reader.result;
+                    this.initialContent = this.fileContent;
+                    this.fileName = file.name;
+                };
+                reader.readAsText(file);
+            } else {
+                alert('Choose text file');
+            }
+        },
+        handleFileContentInput(event) {
+            this.fileContent = event.target.textContent;
+        },
+        saveFile() {
+            const fileData = this.fileContent;
+            let fileName = this.fileName || 'filename.txt';
+            if (!fileName.endsWith('.txt')) {
+                fileName = fileName + '.txt'
+            }
+            const blob = new Blob([fileData], {
+                type: 'text/plain;charset=utf-8'
+            });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            link.click();
+
+            URL.revokeObjectURL(url);
+            console.log("File saved:", fileName);
+        }
+    },
+    computed: {
+        isModified() {
+            return this.fileContent !== this.initialContent;
+        },
+    },
+}
+</script>
+
   <!-- Add "scoped" attribute to limit CSS to this component only -->
-  <style scoped>
-  .home {
+
+<style scoped>
+.home {
     margin: 60px;
-    text-align: center;
-  }
-  h1 {
+}
+
+h1 {
     text-align: center;
     margin: 40px;
-  }
-  </style>
-  
+}
+
+.file-select {
+    text-align: center;
+}
+
+.file-panel {
+    border-radius: 8px 8px 4px 4px;
+    border: 2px solid #f8f9fa;
+    overflow: hidden;
+}
+
+.file-panel .row {
+    padding: 8px;
+    background-color: #f8f9fa;
+}
+
+.file-panel pre {
+    white-space: pre-wrap;
+}
+
+.file-panel pre:focus {
+    outline: none;
+    border-color: transparent;
+
+}
+
+.file-panel input {
+    background-color: transparent;
+    outline: none;
+    border-color: transparent;
+}
+
+.file-panel input:focus {
+    outline: none;
+    border-color: transparent;
+}
+</style>
