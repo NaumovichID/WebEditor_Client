@@ -63,7 +63,7 @@ export default {
                         content: reader.result,
                         fileId: ""
                     };
-                    const addFileUrl = API_BASE_URL;
+                    const addFileUrl = `${API_BASE_URL}`;
                     fetch(addFileUrl, {
                             method: 'POST',
                             headers: {
@@ -82,7 +82,6 @@ export default {
                         })
                         .then(dataFromServer => {
                             this.fileId = dataFromServer.fileId;
-                            console.log("fileid debuggingЖ " + this.fileId)
                             this.fileContent = dataFromServer.content;
                             this.initialContent = this.fileContent;
                             this.fileName = dataFromServer.fileName;
@@ -110,7 +109,7 @@ export default {
                     content: this.fileContent,
                     fileId: this.fileId
                 };
-                const updateFileUrl = '${API_BASE_URL}/${this.fileId}';
+                const updateFileUrl = `${API_BASE_URL}/${this.fileId}`;
                 fetch(updateFileUrl, {
                         method: 'PUT',
                         headers: {
@@ -129,7 +128,6 @@ export default {
                     })
                     .then(dataFromServer => {
                         this.fileId = dataFromServer.fileId;
-                        console.log("fileid debuggingЖ2 " + this.fileId)
                         this.fileContent = dataFromServer.content;
                         this.fileName = dataFromServer.fileName;
                     })
