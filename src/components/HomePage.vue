@@ -31,6 +31,9 @@
 </template>
 
 <script>
+import {
+    API_BASE_URL
+} from '../api/api.js';
 export default {
     name: 'HomePage',
 
@@ -40,6 +43,7 @@ export default {
             fileName: '',
             fileId: '',
             initialContent: '',
+            shouldCallAPI: false,
         };
     },
 
@@ -55,36 +59,37 @@ export default {
                 const reader = new FileReader();
                 reader.onload = () => {
                     const data = {
-                    fileName: file.name,
-                    content: reader.result,
-                    fileId: ""
-                };
-                fetch('http://localhost:8080/api/files', {
-                    method: 'POST',
-                    headers: {
-                    'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                    .then(response => {
-                    if (response.ok) {
-                        console.log('File added successfully');
-                        
-                        return response.json();
-                    } else {
-                        console.error('Error adding file');
-                    }
-                    })
-                    .then(dataFromServer => {
-                    this.fileId = dataFromServer.fileId;
-                    console.log("fileid debuggingЖ "+this.fileId)
-                    this.fileContent = dataFromServer.content;
-                    this.initialContent = this.fileContent;
-                    this.fileName = dataFromServer.fileName;
-                    })
-                    .catch(error => {
-                    console.error('Error adding file', error);
-                    });
+                        fileName: file.name,
+                        content: reader.result,
+                        fileId: ""
+                    };
+                    const addFileUrl = API_BASE_URL;
+                    fetch(addFileUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                console.log('File added successfully');
+
+                                return response.json();
+                            } else {
+                                console.error('Error adding file');
+                            }
+                        })
+                        .then(dataFromServer => {
+                            this.fileId = dataFromServer.fileId;
+                            console.log("fileid debuggingЖ " + this.fileId)
+                            this.fileContent = dataFromServer.content;
+                            this.initialContent = this.fileContent;
+                            this.fileName = dataFromServer.fileName;
+                        })
+                        .catch(error => {
+                            console.error('Error adding file', error);
+                        });
                 };
                 reader.readAsText(file);
             } else {
@@ -93,6 +98,47 @@ export default {
         },
         handleFileContentInput(event) {
             this.fileContent = event.target.textContent;
+            this.shouldCallAPI = true;
+            if (!this.timer) {
+                this.timer = setTimeout(this.makeAPICall, 2000);
+            }
+        },
+        makeAPICall() {
+            if (this.shouldCallAPI) {
+                const data = {
+                    fileName: this.fileName,
+                    content: this.fileContent,
+                    fileId: this.fileId
+                };
+                const updateFileUrl = '${API_BASE_URL}/${this.fileId}';
+                fetch(updateFileUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            console.log('File updated successfully');
+
+                            return response.json();
+                        } else {
+                            console.error('Error updating file');
+                        }
+                    })
+                    .then(dataFromServer => {
+                        this.fileId = dataFromServer.fileId;
+                        console.log("fileid debuggingЖ2 " + this.fileId)
+                        this.fileContent = dataFromServer.content;
+                        this.fileName = dataFromServer.fileName;
+                    })
+                    .catch(error => {
+                        console.error('Error updating file', error);
+                    });
+                this.shouldCallAPI = false;
+                this.timer = null;
+            }
         },
         saveFile() {
             const fileData = this.fileContent;
