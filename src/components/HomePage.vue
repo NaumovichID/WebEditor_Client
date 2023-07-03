@@ -38,6 +38,7 @@ export default {
         return {
             fileContent: '',
             fileName: '',
+            fileId: '',
             initialContent: '',
         };
     },
@@ -53,9 +54,37 @@ export default {
                 console.log(file);
                 const reader = new FileReader();
                 reader.onload = () => {
-                    this.fileContent = reader.result;
+                    const data = {
+                    fileName: file.name,
+                    content: reader.result,
+                    fileId: ""
+                };
+                fetch('http://localhost:8080/api/files', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
+                    .then(response => {
+                    if (response.ok) {
+                        console.log('File added successfully');
+                        
+                        return response.json();
+                    } else {
+                        console.error('Error adding file');
+                    }
+                    })
+                    .then(dataFromServer => {
+                    this.fileId = dataFromServer.fileId;
+                    console.log("fileid debuggingЖ "+this.fileId)
+                    this.fileContent = dataFromServer.content;
                     this.initialContent = this.fileContent;
-                    this.fileName = file.name;
+                    this.fileName = dataFromServer.fileName;
+                    })
+                    .catch(error => {
+                    console.error('Error adding file', error);
+                    });
                 };
                 reader.readAsText(file);
             } else {
