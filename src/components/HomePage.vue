@@ -1,11 +1,11 @@
 <template>
 <div class="home">
 
-    <div v-if="fileContent" class="col file-panel">
+    <div v-if="file.fileName" class="col file-panel">
         <div class="row justify-content-between">
-            <input class="text-primary font-italic" type="text" v-model="fileName" placeholder="{{ fileName }}">
+            <input class="text-primary font-italic" type="text" v-model="file.fileName" placeholder="{{ file.fileName }}">
             <div class="row">
-                <div v-if="isModified">
+                <div v-if="file.isModified">
                     <button type="button" class="btn btn-outline-primary btn-sm" @click="saveFile">Save file</button>
                 </div>
                 <div v-else>
@@ -14,21 +14,18 @@
                 <div class="px-3">
                     <button class="btn btn-outline-dark btn-sm" @click="openModal">Share</button>
 
-                    <modal-window :show="showModal" :share="true" title="Copy the identifier below and share" :content="fileId" @close="closeModal"></modal-window>
+                    <modal-window :show="showModal" :share="true" title="Copy the identifier below and share" :content="file.fileId" @close="closeModal"></modal-window>
 
                 </div>
                 <div class="pr-3">
-                    <button class="btn btn-outline-danger btn-sm"  @click="closeFile">
+                    <button class="btn btn-outline-danger btn-sm" @click="closeFile">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <!--<div class="px-3">
-                    <button class="btn btn-danger btn-sm" @click="stopInterval">Stop updating</button>
-                </div>-->
             </div>
         </div>
 
-        <pre contenteditable="true" @input="handleFileContentInput">{{ fileContent }}</pre>
+        <pre contenteditable="true" @input="handleFileContentInput">{{ file.fileContent }}</pre>
     </div>
 
     <div v-else class="file-select">
@@ -48,6 +45,7 @@
 import {
     API_BASE_URL
 } from '../api/api.js';
+import TextFileModel from '@/models/TextFileModel.js';
 import ModalWindow from './ModalWindow.vue';
 export default {
     name: 'HomePage',
@@ -56,10 +54,7 @@ export default {
     },
     data() {
         return {
-            fileContent: '',
-            fileName: '',
-            fileId: '',
-            initialContent: '',
+            file: new TextFileModel(),
             putChangesFlag: false,
             getChangesFlag: false,
             intervalId: '',
@@ -72,26 +67,22 @@ export default {
             this.$refs.fileInput.click();
         },
 
-        openFileFromLink(file) {
-            console.log('Got file from link');
-            this.fileId = file.fileId;
-            this.fileContent = file.content;
-            this.initialContent = this.fileContent;
-            this.fileName = file.fileName;
+        openFileFromLink(fileFromLink) {
+            console.log('Got a file from the link');
+            this.file = new TextFileModel(fileFromLink.fileId, fileFromLink.fileName, fileFromLink.content);
 
             this.getChangesFlag = true;
             this.intervalId = setInterval(this.getChanges, 3000);
         },
+
         closeFile() {
             clearInterval(this.intervalId);
-            this.fileContent = '';
-            this.fileName = '';
-            this.fileId = '';
-            this.initialContent = '';
+            this.file = new TextFileModel();
             this.putChangesFlag = false;
             this.getChangesFlag = false;
             this.showModal = false;
         },
+
         openModal() {
             this.showModal = true;
         },
@@ -120,21 +111,16 @@ export default {
                         })
                         .then(response => {
                             if (response.ok) {
-                                console.log('File added successfully');
-
                                 return response.json();
                             } else {
                                 console.error('Error adding file');
                             }
                         })
                         .then(dataFromServer => {
-                            this.fileId = dataFromServer.fileId;
-                            this.fileContent = dataFromServer.content;
-                            this.initialContent = this.fileContent;
-                            this.fileName = dataFromServer.fileName;
-
+                            this.file = new TextFileModel(dataFromServer.fileId, dataFromServer.fileName, dataFromServer.content);
+                            console.log('File added successfully');
                             this.getChangesFlag = true;
-                            this.intervalId = setInterval(this.getChanges, 3000);
+                            this.intervalId = setInterval(this.getChanges, 2000);
                         })
                         .catch(error => {
                             console.error('Error adding file', error);
@@ -147,7 +133,7 @@ export default {
         },
         getChanges() {
             if (this.getChangesFlag) {
-                const getChangesUrl = `${API_BASE_URL}/${this.fileId}`;
+                const getChangesUrl = `${API_BASE_URL}/${this.file.fileId}`;
                 fetch(getChangesUrl, {
                         method: 'GET',
                         headers: {
@@ -156,8 +142,6 @@ export default {
                     })
                     .then(response => {
                         if (response.ok) {
-                            console.log('File uploaded successfully');
-
                             return response.json();
                         } else {
                             console.error('Error getting changes');
@@ -165,9 +149,7 @@ export default {
                     })
                     .then(dataFromServer => {
                         console.log('File got changes');
-                        this.fileId = dataFromServer.fileId;
-                        this.fileContent = dataFromServer.content;
-                        this.fileName = dataFromServer.fileName;
+                        this.file.fileContent = dataFromServer.content;
                     })
                     .catch(error => {
                         console.error('Error getting changes', error);
@@ -175,7 +157,8 @@ export default {
             }
         },
         handleFileContentInput(event) {
-            this.fileContent = event.target.textContent;
+            this.getChangesFlag = false;
+            this.file.fileContent = event.target.textContent;
             this.putChangesFlag = true;
             if (!this.timer) {
                 this.timer = setTimeout(this.putChanges, 1000);
@@ -184,11 +167,11 @@ export default {
         putChanges() {
             if (this.putChangesFlag) {
                 const data = {
-                    fileName: this.fileName,
-                    content: this.fileContent,
-                    fileId: this.fileId
+                    fileName: this.file.fileName,
+                    content: this.file.fileContent,
+                    fileId: this.file.fileId
                 };
-                const updateFileUrl = `${API_BASE_URL}/${this.fileId}`;
+                const updateFileUrl = `${API_BASE_URL}/${this.file.fileId}`;
                 fetch(updateFileUrl, {
                         method: 'PUT',
                         headers: {
@@ -198,28 +181,26 @@ export default {
                     })
                     .then(response => {
                         if (response.ok) {
-                            console.log('File updated successfully');
-
                             return response.json();
                         } else {
                             console.error('Error updating file');
                         }
                     })
                     .then(dataFromServer => {
-                        this.fileId = dataFromServer.fileId;
-                        this.fileContent = dataFromServer.content;
-                        this.fileName = dataFromServer.fileName;
+                        console.log('File updated successfully');
+                        this.file.fileContent = dataFromServer.content;
+                        this.file.fileName = dataFromServer.fileName;
                     })
                     .catch(error => {
                         console.error('Error updating file', error);
                     });
-                this.shouldCallAPI = false;
                 this.timer = null;
             }
+            this.getChangesFlag = true;
         },
         saveFile() {
-            const fileData = this.fileContent;
-            let fileName = this.fileName || 'filename.txt';
+            const fileData = this.file.fileContent;
+            let fileName = this.file.fileName || 'filename.txt';
             if (!fileName.endsWith('.txt')) {
                 fileName = fileName + '.txt'
             }
@@ -236,11 +217,6 @@ export default {
             URL.revokeObjectURL(url);
             console.log("File saved:", fileName);
         }
-    },
-    computed: {
-        isModified() {
-            return this.fileContent !== this.initialContent;
-        },
     },
 }
 </script>

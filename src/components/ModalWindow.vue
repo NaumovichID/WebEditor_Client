@@ -54,7 +54,6 @@ export default {
                 .then(response => {
                     if (response.ok) {
                         console.log('File uploaded successfully');
-
                         return response.json();
                     } else {
                         console.error('Error uploading file');
@@ -66,7 +65,7 @@ export default {
                 })
                 .catch(error => {
                     console.error('Error uploading file', error);
-                    this.message = 'Please, enter the link!';
+                    this.message = 'Please, enter the correct link!';
                 });
         },
         closeModal() {
