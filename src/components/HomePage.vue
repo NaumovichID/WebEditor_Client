@@ -18,7 +18,12 @@
 
                 </div>
                 <div class="pr-3">
-                    <button class="btn btn-outline-danger btn-sm" @click="closeFile">
+                    <button class="btn btn-outline-success btn-sm" @click="commitFile">
+                        Commit
+                    </button>
+                </div>
+                <div class="pr-3">
+                    <button class="btn btn-outline-danger btn-sm" @click="closeFile" >
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -77,10 +82,41 @@ export default {
 
         closeFile() {
             clearInterval(this.intervalId);
+            const deleteFileUrl = `${API_BASE_URL}/${this.file.fileId}`;
+                    fetch(deleteFileUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                console.log('File deleted successfully');
+                            } else {
+                                console.error('Error deleting file');
+                            }
+                        });
             this.file = new TextFileModel();
             this.putChangesFlag = false;
             this.getChangesFlag = false;
             this.showModal = false;
+        },
+
+        commitFile() {
+            const commitFileUrl = `${API_BASE_URL}/commit/${this.file.fileId}`;
+            fetch(commitFileUrl, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        })
+                        .then(response => {
+                            if (response.ok) {
+                                console.log('File commited successfully');
+                            } else {
+                                console.error('Error committing file');
+                            }
+                        });
         },
 
         openModal() {
