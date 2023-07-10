@@ -31,3 +31,14 @@ Follow the instructions below to start the client application (using docker).
 3. To stop the container, run:
     
     ``docker stop vue-app-container``
+
+
+## Functionality showcase
+
+Opening and editing a file by multiple clients:
+
+![open-edit](gif/client-showcase-open-edit.gif)
+
+Renaming and saving a file locally:
+
+![rename-save](gif/client-showcase-name-save.gif)
